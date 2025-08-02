@@ -19,6 +19,7 @@ library(crosstalk)
 library(reactable)
 library(htmltools)
 library(rvest)
+# library(xlsx) # check Java
 ```
 
 
@@ -27,7 +28,6 @@ library(rvest)
 
 # mutate/fonction pour créer le lien page de buts
 # fonction pour aller chercher le nombre de buts d'un joueur
-
 
 ```
 
@@ -63,7 +63,7 @@ goal_informations <- function(goal_link){
   
 }
 
-goal_informations(link)
+# goal_informations(link)
 
 page <- read_html("https://fbref.com/en/players/bf4c41f9/Arnaud-Kalimuendo")
 img = page %>%
@@ -174,7 +174,13 @@ reactable(
   shared_data,
   columns = list(
     players = colDef(name = "Joueur", style = list(fontWeight = "bold")),
-    football_players = colDef(name = "Football Player", align = "center"),
+    football_players = colDef(name = "Football Player", align = "center", cell = function(value) {
+      image <- img(src = img, style = "height: 24px;", alt = value)
+      tagList(
+        div(style = "display: inline-block; width: 45px", image),
+        value
+      )
+    }),
     goals = colDef(name = "Goals", cell = function(value) {
       # Coloration conditionnelle simple
       color <- switch(TRUE,
