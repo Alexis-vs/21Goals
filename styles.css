@@ -13,3 +13,20 @@ h1.title {
 body {
   font-family: 'Open Sans', sans-serif;
 }
+
+/* display laptop/smartphone */
+.responsive-columns {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .responsive-columns {
+    flex-direction: column;
+  }
+
+  .responsive-columns .column {
+    width: 100% !important;
+  }
+}

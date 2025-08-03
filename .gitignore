@@ -4,3 +4,8 @@
 .Ruserdata
 
 /.quarto/
+/_site/
+
+/21Goals_files/
+.DS_Store
+21Goals.html
