@@ -123,8 +123,7 @@ reactable(
     goals = colDef(name = "Goals", cell = function(value){
       width <- paste0(value / max(data$goals) * 100, "%")
       bar_chart(value, width = width)
-    }),
-    link = colDef(show = FALSE)
+    })
   ),
   bordered = TRUE,
   highlight = TRUE,
