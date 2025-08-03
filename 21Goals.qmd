@@ -1,5 +1,5 @@
 ---
-title: "Black Jack Ligue 21"
+title: "Black Jack Ligue 1"
 format:
   html:
     page-layout: full
@@ -19,75 +19,27 @@ library(crosstalk)
 library(reactable)
 library(htmltools)
 library(rvest)
-# library(xlsx) # check Java
+library(xlsx)
 ```
 
 
 ```{r}
-# Todo
-
-# mutate/fonction pour créer le lien page de buts
-# fonction pour aller chercher le nombre de buts d'un joueur
-
+data <- xlsx::read.xlsx("data.xlsx", sheetIndex = 1)
 ```
 
 
 ```{r}
-
-get_goal_link <- function(player_link){
-  
-  split_player_link = player_link %>% strsplit("/")
-  base_link = paste(split_player_link[[1]][1:6],collapse = "/")
-  goal_link = paste(base_link, "goallogs/dom_lg", paste0(split_player_link[[1]][7], "-Goal-Log"), sep = "/")
-  
-  return(goal_link)
-  
-}
-
-test_link = "https://fbref.com/en/players/bf4c41f9/Arnaud-Kalimuendo"
-link = get_goal_link(test_link)
-
-goal_informations <- function(goal_link){
-  
-  page <- read_html(goal_link)
-  
-  df = page %>%
-    html_element("#goallogs_goals") %>%
-    html_table() %>%
-    select(Rk, Date, xG) %>%
-    filter(!is.na(Rk)) %>%
-    mutate(Date = as.Date(Date)) %>%
-    filter(Date > "2024-08-01")
-  
-  return(df)
-  
-}
-
-# goal_informations(link)
-
-page <- read_html("https://fbref.com/en/players/bf4c41f9/Arnaud-Kalimuendo")
-img = page %>%
-  html_elements(".media-item img") %>% 
-  html_attr("src")
-img
+# testing adding an image for the future
+img = "https://www.footballdatabase.eu/images/photos/players/a_247/247255.jpg"
 ```
 
 
-
 ```{r}
-players <- c("Magic 'Maestro' Moustik", "Fan de Kroupie", "Mbappe Lover",
-             "RCK", "Tokpa FC")
-# Kvara
-# Fabian
+# currently simulates n goals, but wip to collect goals
+data$goals = rnorm(5*4, mean = 5, sd = 2) %>% round()
 
-df <- data.frame(
-  players = players,
-  football_players = head(LETTERS, 5*4),
-  goals = rnorm(5*4, mean = 5, sd = 2) %>% round()
-) 
-
-df_group_by <- df %>%
-  group_by(players) %>%
+df_group_by <- data %>%
+  group_by(player) %>%
   summarise(sum_goals = sum(goals))
 ```
 
@@ -98,58 +50,39 @@ df_group_by <- df %>%
 
 highchart() %>%
   hc_chart(polar = TRUE, type = "line") %>%
-  # hc_title(text = "Radar Chart - Nombre de buts") %>%
-  hc_xAxis(
-    categories = df_group_by$players,
-    tickmarkPlacement = "on",
-    lineWidth = 0
-    #gridLineColor = "transparent"  # ligne xAxis invisible
-  ) %>%
-  hc_yAxis(
-    gridLineInterpolation = "polygon",
-    lineWidth = 0,
-    min = 0,
-    max = 30,
-    tickPositions = c(0, 21, 30),
-    gridLineColor = "transparent",  # ligne yAxis invisible
-    plotBands = list(
-      list(
-        from = 21,
-        to = 30,
-        color = "rgba(255, 0, 0, 0.2)",
-        label = list(
-          text = "Au-dessus de 21",
-          style = list(color = "red")
-        )
-      )
-    ),
-  plotLines = list(
-    list(
-      value = 21,
-      color = "#B00020",  # rouge foncé
-      width = 2,
-      dashStyle = "Solid",
-      label = list(
-        text = "Seuil : 21",
-        style = list(color = "#B00020", fontWeight = "bold"),
-        align = "right"
-      ),
-      zIndex = 5  # s'assurer qu'elle passe au-dessus des autres éléments
-    )
-  )
-  ) %>%
-  hc_series(list(
-    name = "Goals",
-    data = df_group_by$sum_goals,
-    pointPlacement = "on"
-  )) %>%
+  hc_xAxis(categories = df_group_by$player,
+           tickmarkPlacement = "on",
+           lineWidth = 0) %>%
+  hc_yAxis(gridLineInterpolation = "polygon",
+           lineWidth = 0,
+           min = 0,
+           max = 30,
+           tickPositions = c(0, 21, 30),
+           gridLineColor = "transparent",
+           plotBands = list(
+             list(from = 21,
+                  to = 30,
+                  color = "rgba(255, 0, 0, 0.2)",
+                  label = list(text = "Au-dessus de 21",
+                               style = list(color = "red")))),
+           plotLines = list(
+             list(value = 21,
+                  color = "#B00020",
+                  width = 2,
+                  dashStyle = "Solid",
+                  label = list(text = "Seuil : 21",
+                               style = list(color = "#B00020",
+                                            fontWeight = "bold"),
+                               align = "right"),
+                  zIndex = 5))) %>%
+  hc_series(list(name = "Goals",
+                 data = df_group_by$sum_goals,
+                 pointPlacement = "on")) %>%
   hc_legend(enabled = FALSE) %>%
-  hc_tooltip(
-    shared = TRUE,
-    pointFormat = "<span style='color:{series.color}'>{series.name}: <b>{point.y}</b><br/>"
-  )
+  hc_tooltip(shared = TRUE,
+             pointFormat = "<span style='color:{series.color}'>{series.name}: <b>{point.y}</b><br/>")
 
-  
+
 ```
 
 :::
@@ -158,39 +91,40 @@ highchart() %>%
 
 ```{r}
 
-shared_data <- SharedData$new(df,
-                              key = ~row.names(df),
+shared_data <- SharedData$new(data,
+                              key = ~row.names(data),
                               group = "players_group")
 
 filter_select("player_selector",
-              "Choisir un joueur :",
+              "Select a player :",
               shared_data,
-              ~players,
+              ~player,
               multiple = FALSE)
 
-# Affichage table filtrée
-# reactable(shared_data, searchable = FALSE, highlight = TRUE)
+# Bar chart for reactable
+bar_chart <- function(label, width = "100%", height = "1rem", fill = "#00bfc4", background = NULL){
+  bar <- div(style = list(background = fill, width = width, height = height))
+  chart <- div(style = list(flexGrow = 1, marginLeft = "0.5rem", background = background), bar)
+  div(style = list(display = "flex", alignItems = "center"), label, chart)
+}
+
+# Interactive data table
 reactable(
   shared_data,
   columns = list(
-    players = colDef(name = "Joueur", style = list(fontWeight = "bold")),
-    football_players = colDef(name = "Football Player", align = "center", cell = function(value) {
+    player = colDef(name = "Joueur", style = list(fontWeight = "bold"), show = FALSE),
+    football_player = colDef(name = "Football Player", align = "left", cell = function(value){
       image <- img(src = img, style = "height: 24px;", alt = value)
       tagList(
         div(style = "display: inline-block; width: 45px", image),
         value
       )
     }),
-    goals = colDef(name = "Goals", cell = function(value) {
-      # Coloration conditionnelle simple
-      color <- switch(TRUE,
-                      value < 25 ~ "#A9DFBF",   # vert clair
-                      value >= 25 & value < 30 ~ "#F9E79F",  # jaune/orange clair
-                      value >= 30 ~ "#F5B7B1",
-                      "#ffffff")
-      div(style = paste("background-color:", color, "; color: white; padding: 5px; border-radius: 4px"),
-          value)
-    })
+    goals = colDef(name = "Goals", cell = function(value){
+      width <- paste0(value / max(data$goals) * 100, "%")
+      bar_chart(value, width = width)
+    }),
+    link = colDef(show = FALSE)
   ),
   bordered = TRUE,
   highlight = TRUE,
