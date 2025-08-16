@@ -23,9 +23,9 @@ jobs:
           r-version: '4.4.1'
 
       - name: Install R Dependencies
-          run: |
-            R -e 'install.packages(c("dplyr", "highcharter", "crosstalk",
-            "reactable", "htmltools", "rvest", "xlsx", "purrr", "stringr"))'
+        run: |
+          R -e 'install.packages(c("dplyr", "highcharter", "crosstalk",
+          "reactable", "htmltools", "rvest", "xlsx", "purrr", "stringr"))'
 
       - name: Render and Publish
         uses: quarto-dev/quarto-actions/publish@v2
