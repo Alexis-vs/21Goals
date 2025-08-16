@@ -12,6 +12,24 @@ h1.title {
 
 body {
   font-family: 'Open Sans', sans-serif;
+  background-image: url('images/marqui-GOAT.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  margin: 0;
+}
+
+/* met un calque sur l'image */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* display laptop/smartphone */

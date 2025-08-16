@@ -1,10 +1,14 @@
 # 21 Goals
 
-Currently work in progress
+This is a quick project to visualize ranked about 21 Goals game. The dashboard is build with R via Quarto, so to render the document, run `quarto render 21Goals.qmd` to have an interactive html page.
+
+To use this, please complete the excel file with your name, and your 4 selected players with link from <https://fbref.com/>
+
+To learn more about this game, see <https://www.21goals.app/>.
 
 ## To do
 
--   automatically collect goals (& others stats like xG, player photos, etc.)
 -   write GA workflow for every week-ends
+-   add renv
 
-To learn more about this game, see <https://www.21goals.app/>. Currently WIP, example with 2024-2025 season.
+Currently WIP, example with 2024-2025 season.

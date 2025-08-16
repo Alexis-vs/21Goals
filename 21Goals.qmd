@@ -20,20 +20,31 @@ library(htmltools)
 library(rvest)
 library(xlsx)
 library(purrr)
+library(stringr)
 ```
 
 
 ```{r}
-data <- xlsx::read.xlsx("data.xlsx", sheetIndex = 1)
+data <- xlsx::read.xlsx("data.xlsx", sheetIndex = 1) %>% head(8)
 ```
 
 
-```{r}
+```{r functions}
 get_goal_link <- function(player_link){
   
   split_player_link = player_link %>% strsplit("/")
   base_link = paste(split_player_link[[1]][1:6],collapse = "/")
   goal_link = paste(base_link, "goallogs/dom_lg", paste0(split_player_link[[1]][7], "-Goal-Log"), sep = "/")
+  
+  return(goal_link)
+  
+}
+
+get_dom_goal_link <- function(player_link){
+  
+  split_player_link = player_link %>% strsplit("/")
+  base_link = paste(split_player_link[[1]][1:6],collapse = "/")
+  goal_link = paste(base_link, "dom_lg", paste0(split_player_link[[1]][7], "-Domestic-League-Stats"), sep = "/")
   
   return(goal_link)
   
@@ -47,9 +58,31 @@ goal_informations <- function(page){
     select(Rk, Date, xG) %>% ### rajouter 'Round' pour un graph cumulatif / changer sortie
     filter(!is.na(Rk)) %>%
     mutate(Date = as.Date(Date)) %>%
-    filter(Date > "2024-08-01") %>%
+    filter(Date > "2024-08-01") %>% ## update date for next season
     summarise(n_goals = n(),
               sum_xG = sum(xG))
+  
+  return(df)
+  
+}
+
+get_player_stats <- function(page, season, country){
+  
+  table = page %>%
+    html_element("#div_stats_standard_dom_lg") %>%
+    html_table(header = TRUE)
+  
+  table_colnames = (table %>% as.matrix())[1,1:22]
+  df = (table %>% as.matrix())[-1,1:22] %>% as.data.frame()
+  colnames(df) = table_colnames
+  
+  keep_vars = c("MP", "Min", "Gls", "PK", "PKatt", "xG")
+  
+  df = df %>%
+    filter(Season == season & grepl(country,Country)) %>%
+    select(all_of(keep_vars)) %>%
+    mutate(Min = str_replace(Min, ",", "")) %>%
+    mutate(across(all_of(keep_vars), as.numeric))
   
   return(df)
   
@@ -61,32 +94,34 @@ get_img_player <- function(page){
     html_elements(".media-item img") %>% 
     html_attr("src")
   
-  if(is_empty(img)){img <- "https://assets-fr.imgfoot.com/mbappe-chute.jpg"}
+  if(is_empty(img)){img <- "images/mbappe-chute.jpg"}
   
   return(img)
   
 }
 
-get_player_informations <- function(player_link){
+get_player_informations <- function(player_link, season){
   
-  goal_link <- get_goal_link(player_link)
+  goal_link <- get_dom_goal_link(player_link)
   page <- read_html(goal_link)
   
   img <- get_img_player(page)
-  df_goals <- goal_informations(page) %>%
+  df_goals <- get_player_stats(page, season = season, country = "FRA") %>%
     mutate(img = img,
            goal_link = goal_link)
   
-  Sys.sleep(10)
+  Sys.sleep(12)
   return(df_goals)
   
 }
 
-df_informations <- lapply(data$link, get_player_informations)
+```
+
+```{r}
+df_informations <- lapply(data$link, get_player_informations, season = "2024-2025")
 df_informations <- do.call("rbind", df_informations)
 
 data <- cbind(data, df_informations)
-
 ```
 
 
@@ -96,7 +131,7 @@ data <- cbind(data, df_informations)
 
 df_group_by <- data %>%
   group_by(player) %>%
-  summarise(sum_goals = sum(n_goals))
+  summarise(sum_goals = sum(Gls))
 
 highchart() %>%
   hc_chart(polar = TRUE, type = "line") %>%
@@ -171,10 +206,15 @@ reactable(
         value
       )
     }),
-    n_goals = colDef(name = "Goals", cell = function(value){
-      width <- paste0(value / max(data$n_goals) * 100, "%")
+    Gls = colDef(name = "Goals", cell = function(value){
+      width <- paste0(value / max(data$Gls) * 100, "%")
       bar_chart(value, width = width)
-    })
+    }),
+    MP = colDef(name = "Matches Played"),
+    Min = colDef(show = TRUE),
+    xG = colDef(name = "Sum xG"),
+    PK = colDef(name = "Penalty"),
+    PKatt = colDef(name = "Penaltys Attempted")
   ),
   bordered = TRUE,
   highlight = TRUE,
