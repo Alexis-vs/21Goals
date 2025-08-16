@@ -25,7 +25,7 @@ library(stringr)
 
 
 ```{r}
-data <- xlsx::read.xlsx("data.xlsx", sheetIndex = 1) %>% head(8)
+data <- xlsx::read.xlsx("data.xlsx", sheetIndex = 1)
 ```
 
 
@@ -94,7 +94,7 @@ get_img_player <- function(page){
     html_elements(".media-item img") %>% 
     html_attr("src")
   
-  if(is_empty(img)){img <- "images/mbappe-chute.jpg"}
+  if(is_empty(img)){img <- "https://assets-fr.imgfoot.com/mbappe-chute.jpg"}
   
   return(img)
   
