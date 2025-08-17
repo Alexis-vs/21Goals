@@ -127,7 +127,7 @@ data <- data %>%
   mutate(goal_link = get_dom_goal_link(link)) %>%
   ungroup()
 
-df_informations <- lapply(data$goal_link, get_player_informations, season = "2024-2025")
+df_informations <- lapply(unique(data$goal_link), get_player_informations, season = "2024-2025")
 df_informations <- do.call("rbind", df_informations)
 
 data <- data %>%
