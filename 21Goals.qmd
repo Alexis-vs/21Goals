@@ -58,7 +58,7 @@ goal_informations <- function(page){
     select(Rk, Date, xG) %>% ### rajouter 'Round' pour un graph cumulatif / changer sortie
     filter(!is.na(Rk)) %>%
     mutate(Date = as.Date(Date)) %>%
-    filter(Date > "2024-08-01") %>% ## update date for next season
+    filter(Date > "2025-08-14") %>%
     summarise(n_goals = n(),
               sum_xG = sum(xG))
   
@@ -127,7 +127,7 @@ data <- data %>%
   mutate(goal_link = get_dom_goal_link(link)) %>%
   ungroup()
 
-df_informations <- lapply(unique(data$goal_link), get_player_informations, season = "2024-2025")
+df_informations <- lapply(unique(data$goal_link), get_player_informations, season = "2025-2026")
 df_informations <- do.call("rbind", df_informations)
 
 data <- data %>%
