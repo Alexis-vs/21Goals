@@ -81,6 +81,7 @@ get_player_stats <- function(page, season, country){
   df = df %>%
     filter(Season == season & grepl(country,Country)) %>%
     select(all_of(keep_vars)) %>%
+    mutate(across(everything(), ~ ifelse(.x == "", 0, .x))) %>%
     mutate(Min = str_replace(Min, ",", "")) %>%
     mutate(across(all_of(keep_vars), as.numeric))
   
@@ -128,7 +129,8 @@ data <- data %>%
   ungroup()
 
 df_informations <- lapply(unique(data$goal_link), get_player_informations, season = "2025-2026")
-df_informations <- do.call("rbind", df_informations)
+df_informations <- do.call("rbind", df_informations) %>%
+  select(Gls, xG, everything())
 
 data <- data %>%
   left_join(df_informations, by = "goal_link")
@@ -217,7 +219,7 @@ reactable(
       )
     }),
     Gls = colDef(name = "Goals", cell = function(value){
-      width <- paste0(value / max(data$Gls) * 100, "%")
+      width <- paste0(value / max(data$Gls, na.rm = TRUE) * 100, "%")
       bar_chart(value, width = width)
     }),
     MP = colDef(name = "Matches Played"),
