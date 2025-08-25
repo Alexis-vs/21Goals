@@ -8,7 +8,5 @@ To learn more about this game, see <https://www.21goals.app/>.
 
 ## To do
 
--   write GA workflow for every week-ends
+-   cumulative chart by Matchweek
 -   add renv
-
-Currently WIP, example with 2024-2025 season.
