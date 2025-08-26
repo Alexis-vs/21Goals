@@ -17,11 +17,11 @@ library(highcharter)
 library(crosstalk)
 library(reactable)
 library(htmltools)
+library(httr)
 library(rvest)
 library(xlsx)
 library(purrr)
 library(stringr)
-library(httr2)
 ```
 
 
