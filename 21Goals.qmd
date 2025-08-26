@@ -17,7 +17,7 @@ library(highcharter)
 library(crosstalk)
 library(reactable)
 library(htmltools)
-library(httr)
+library(httr2)
 library(rvest)
 library(xlsx)
 library(purrr)
@@ -110,22 +110,23 @@ get_img_player <- function(page){
 
 get_player_informations <- function(goal_link, season){
   
-  headers <- add_headers(
-    "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
-    "Accept" = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Encoding" = "gzip, deflate, br",
-    "Accept-Language" = "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Connection" = "keep-alive",
-    "Upgrade-Insecure-Requests" = "1",
-    "Sec-Fetch-Dest" = "document",
-    "Sec-Fetch-Mode" = "navigate",
-    "Sec-Fetch-Site" = "none",
-    "Sec-Fetch-User" = "?1"
-  )
+  req <- request(goal_link) %>%
+    req_headers(
+      "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+      "Accept" = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Encoding" = "gzip, deflate, br",
+      "Accept-Language" = "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+      "Connection" = "keep-alive",
+      "Upgrade-Insecure-Requests" = "1",
+      "Sec-Fetch-Dest" = "document",
+      "Sec-Fetch-Mode" = "navigate",
+      "Sec-Fetch-Site" = "none",
+      "Sec-Fetch-User" = "?1"
+    )
   
-  response <- GET(goal_link, headers)
+  response <- req_perform(req)
   
-  page <- read_html(response)
+  page <- read_html(resp_body_string(response))
   
   img <- get_img_player(page)
   df_goals <- get_player_stats(page, season = season, country = "FRA") %>%
@@ -254,6 +255,7 @@ reactable(
     link = colDef(show = FALSE),
     img = colDef(show = FALSE),
     goal_link = colDef(show = FALSE),
+    round_goal_link = colDef(show = FALSE),
     football_player = colDef(name = "Football Player", align = "left", cell = function(value, index){
       image <- img(src = data$img[index], style = "height: 24px;", alt = value)
       tagList(
