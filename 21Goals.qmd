@@ -299,7 +299,7 @@ df_list <- df_cumulative %>%
 highchart() %>%
   hc_chart(type = "line") %>%
   hc_title(text = "Cumultaive Goals by Matchweek") %>%
-  hc_xAxis(categories = paste("Round", sort(unique(df$Round)))) %>%
+  hc_xAxis(categories = paste("Round", sort(unique(df_cumulative$Round)))) %>%
   hc_yAxis(title = list(text = "Cumulative Goals"),
            min = 0,
            max = ifelse(max(df_cumulative$CumGoals)>20, max(df_cumulative$CumGoals) + 3, 22)) %>%
