@@ -169,7 +169,7 @@ data <- data %>%
 ```
 
 
-```{r, eval=FALSE}
+```{r}
 df_informations <- lapply(unique(data$round_goal_link), get_goals_by_rounds)
 df_informations <- do.call("rbind", df_informations)
 
