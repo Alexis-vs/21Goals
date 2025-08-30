@@ -8,5 +8,4 @@ To learn more about this game, see <https://www.21goals.app/>.
 
 ## To do
 
--   cumulative chart by Matchweek
 -   add renv
