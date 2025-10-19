@@ -295,6 +295,11 @@ df_list <- df_cumulative %>%
   group_by(player) %>%
   summarise(data = list(CumGoals), .groups = "drop")
 
+theoretical_line <- data.frame(
+  round = 1:34,
+  theoretical = (21 / (34 - 1)) * (1:34 - 1)
+)
+
 # Création du graphique line chart
 highchart() %>%
   hc_chart(type = "line") %>%
@@ -310,6 +315,24 @@ highchart() %>%
         data = df_list$data[[i]]
       )
     })
+  ) %>%
+  hc_add_series(
+    name = "Theoritical goal",
+    data = round(theoretical_line$theoretical, 2),
+    color = "#B00020",
+    lineWidth = 3,
+    dashStyle = "ShortDot",
+    marker = list(enabled = FALSE)
+  ) %>%
+  hc_add_series(
+    type = "arearange",
+    name = "Area under theoretical goal",
+    data = lapply(1:34, function(i) {
+      list(i - 1, 0, theoretical_line$theoretical[i])
+    }),
+    color = "rgba(200,200,200,0.3)",
+    enableMouseTracking = FALSE,
+    showInLegend = FALSE
   ) %>%
   hc_plotOptions(
     line = list(dataLabels = list(enabled = FALSE),
