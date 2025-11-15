@@ -25,7 +25,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version: '3.11'
           
       - name: Install system dependencies
         run: |
@@ -67,8 +67,9 @@ jobs:
           
       - name: Setup python virtualenv
         run: |
+          R -e 'reticulate::virtualenv_create("21GoalsEnv")'
           R -e 'reticulate::virtualenv_install("21GoalsEnv",
-          packages = c("pandas", "selenium", "bs4", "lxml"))
+          packages = c("pandas", "selenium", "bs4", "lxml"))'
 
       - name: Render and Publish
         uses: quarto-dev/quarto-actions/publish@v2
