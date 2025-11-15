@@ -36,7 +36,8 @@ jobs:
             libxml2-dev \
             default-jdk \
             wget \
-            gnupg
+            gnupg \
+            python3-venv python3-pip
             
       - name: Install Chrome
         run: |
