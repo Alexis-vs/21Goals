@@ -37,6 +37,7 @@ jobs:
             default-jdk \
             wget \
             gnupg \
+            libpng-dev \
             python3-venv python3-pip
             
       - name: Install Chrome
