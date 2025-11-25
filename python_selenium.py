@@ -6,14 +6,14 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-def extract_table_from_url(url: str, table_id: str, image: bool = False) -> tuple[pd.DataFrame, str | None]:
+def extract_table_from_url(urls: list[str], table_id: str, image: bool = False) -> tuple[pd.DataFrame, str | None]:
     """
     Open web page with Selenium, extract HTML table with table id, and also can
     be collect url image player
 
     Parameters
     ----------
-    url : str
+    urls : list[str]
         Fbref URL.
     table_id : str
         Table id.
@@ -44,44 +44,51 @@ def extract_table_from_url(url: str, table_id: str, image: bool = False) -> tupl
     })
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     
-    try:
-        driver.get(url)
-        time.sleep(1)
+    results = []
+    results_images = []
+    
+    for url in urls:
+        try:
+            driver.get(url)
+            time.sleep(2)
         
-        html = driver.page_source
-        html = re.sub(r'<!--', '', html)
-        html = re.sub(r'-->', '', html)
+            html = driver.page_source
+            html = re.sub(r'<!--', '', html)
+            html = re.sub(r'-->', '', html)
         
-        soup = BeautifulSoup(html, "html.parser")
+            soup = BeautifulSoup(html, "html.parser")
         
-        table = soup.find("table", id=table_id)
-        if table is None:
-            raise ValueError(f"No table with '{table_id}' on {url}")
+            table = soup.find("table", id=table_id)
+            if table is None:
+                raise ValueError(f"No table with '{table_id}' on {url}")
         
-        df = pd.read_html(StringIO(str(table)))[0]
-        
-        img_url = None
-        if image:
-            # default img
-            default_img_url = "https://assets-fr.imgfoot.com/mbappe-chute.jpg"
+            df = pd.read_html(StringIO(str(table)))[0]
+            results.append(df)
             
-            media_item = soup.select_one(".media-item img")
-            
-            if media_item and media_item.get('src'):
-                img_url = media_item['src']
-            else:
-                img = soup.find("img", alt=lambda x: x and "headshot" in x.lower())
-                
-                if img and img.get('src'):
-                    img_url = img['src']
+            if image=='yes':
+                default_img_url = "https://assets-fr.imgfoot.com/mbappe-chute.jpg"
+
+                # 1. CSS selector: .media-item img
+                media_item = soup.select_one(".media-item img")
+                if media_item and media_item.get("src"):
+                    img_url = media_item["src"]
+
+                # 2. alt contains "headshot"
                 else:
-                    img_url = default_img_url
+                    img_tag = soup.find("img", alt=lambda x: x and "headshot" in x.lower())
+                    if img_tag and img_tag.get("src"):
+                        img_url = img_tag["src"]
+                    else:
+                        img_url = default_img_url
+
+                # 3. normalize relative URL
+                if img_url and img_url != default_img_url and img_url.startswith("/"):
+                    img_url = urljoin(url, img_url)
+
+            results_images.append(img_url)
             
-            if img_url and img_url != default_img_url and img_url.startswith('/'):
-                from urllib.parse import urljoin
-                img_url = urljoin(url, img_url)
-        
-        return df, img_url
-        
-    finally:
-        driver.quit()
+        except Exception as e:
+            print(f"Error on URL {url}: {e}")
+            
+    driver.quit()
+    return results, results_images

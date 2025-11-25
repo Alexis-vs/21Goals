@@ -60,12 +60,9 @@ get_dom_goal_link <- function(player_link){
   
 }
 
-get_player_informations <- function(goal_link, season){
+get_player_informations <- function(extract, season){
   
-  extract = scraper$extract_table_from_url(goal_link, table_id = "stats_standard_dom_lg", image = "yes")
-  
-  img <- extract[[2]]
-  df <- extract[[1]]
+  df <- extract
   
   table_colnames = stringr::str_extract(names(df), "(?<=, ').*?(?=')")
   colnames(df) = table_colnames
@@ -78,34 +75,28 @@ get_player_informations <- function(goal_link, season){
     select(all_of(keep_vars)) %>%
     mutate(across(everything(), ~ ifelse(.x == "", 0, .x))) %>%
     mutate(Min = str_replace(Min, ",", "")) %>%
-    mutate(across(all_of(keep_vars), as.numeric)) %>%
-    mutate(img = img,
-           goal_link = goal_link)
+    mutate(across(all_of(keep_vars), as.numeric))
   
   if(nrow(df) == 0){
     df <- as.data.frame(matrix(0, nrow = 1, ncol = length(keep_vars)))
     colnames(df) <- keep_vars
   }
   
-  Sys.sleep(20)
   return(df_goals)
   
 }
 
-get_goals_by_rounds <- function(round_goal_link){
+get_goals_by_rounds <- function(extract){
   
-  extract <- scraper$extract_table_from_url(round_goal_link, table_id = "goallogs_goals")
-  df_goals <- extract[[1]] %>%
+  df_goals <- extract %>%
     select(Rk, Comp, Round, Date, xG) %>%
     filter(!is.na(Rk)) %>%
     filter(Comp == "Ligue 1") %>%
     mutate(Date = as.Date(Date)) %>%
     filter(Date > "2025-08-14") %>%
     group_by(Round) %>%
-    summarise(goals = n()) %>%
-    mutate(round_goal_link = round_goal_link)
+    summarise(goals = n())
   
-  Sys.sleep(20)
   return(df_goals)
   
 }
@@ -119,10 +110,19 @@ data <- data %>%
   mutate(goal_link = get_dom_goal_link(link),
          round_goal_link = get_goal_by_round_link(link)) %>%
   ungroup()
+```
 
-df_informations <- lapply(unique(data$goal_link), get_player_informations, season = "2025-2026")
+
+```{r}
+goal_links = unique(data$goal_link)
+extract = scraper$extract_table_from_url(goal_links, table_id = "stats_standard_dom_lg", image='yes')
+
+img_links <- extract[[2]]
+df_informations <- lapply(extract[[1]], get_player_informations, season = "2025-2026")
 df_informations <- do.call("rbind", df_informations) %>%
-  select(Gls, xG, everything())
+  select(Gls, xG, everything()) %>%
+  mutate(goal_link = goal_links,
+         img = img_links)
 
 data <- data %>%
   left_join(df_informations, by = "goal_link")
@@ -130,7 +130,18 @@ data <- data %>%
 
 
 ```{r}
-df_informations <- lapply(unique(data$round_goal_link), get_goals_by_rounds)
+round_goal_links <- unique(data$round_goal_link)
+extract <- scraper$extract_table_from_url(round_goal_links, table_id = "goallogs_goals")
+
+df_informations <- lapply(extract[[1]], get_goals_by_rounds)
+df_informations <- Map(
+  function(df, link) {
+    if (!is.null(df)) df$round_goal_link <- link
+    df
+  },
+  df_informations,
+  round_goal_links)
+
 df_informations <- do.call("rbind", df_informations)
 
 df_cumulative <- merge(data, df_informations, by = "round_goal_link") %>%
