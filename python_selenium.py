@@ -50,7 +50,7 @@ def extract_table_from_url(urls: list[str], table_id: str, image: bool = False) 
     for url in urls:
         try:
             driver.get(url)
-            time.sleep(2)
+            time.sleep(20)
         
             html = driver.page_source
             html = re.sub(r'<!--', '', html)
