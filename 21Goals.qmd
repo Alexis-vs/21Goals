@@ -77,9 +77,9 @@ get_player_informations <- function(extract, season){
     mutate(Min = str_replace(Min, ",", "")) %>%
     mutate(across(all_of(keep_vars), as.numeric))
   
-  if(nrow(df) == 0){
-    df <- as.data.frame(matrix(0, nrow = 1, ncol = length(keep_vars)))
-    colnames(df) <- keep_vars
+  if(nrow(df_goals) == 0){
+    df_goals <- as.data.frame(matrix(0, nrow = 1, ncol = length(keep_vars)))
+    colnames(df_goals) <- keep_vars
   }
   
   return(df_goals)
