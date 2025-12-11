@@ -129,7 +129,7 @@ data <- data %>%
 ```
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 round_goal_links <- unique(data$round_goal_link)
 extract <- scraper$extract_table_from_url(round_goal_links, table_id = "goallogs_goals")
 
@@ -312,7 +312,16 @@ highchart() %>%
                               radius = 4)),
     series = list(marker = list(enabled = TRUE))
   ) %>%
-  hc_tooltip(shared = TRUE, crosshairs = TRUE) %>%
+  hc_tooltip(shared = TRUE,
+             crosshairs = TRUE,
+             useHTML = TRUE,
+             positioner = JS("function (labelWidth, labelHeight, point) {
+      return { 
+        x: point.plotX + 75, 
+        y: point.plotY 
+      };
+    }")
+    ) %>%
   hc_yAxis(plotLines = list(list(value = 21,
                                  color = "#B00020",
                                  width = 4))
