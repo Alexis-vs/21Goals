@@ -161,7 +161,6 @@ df_cumulative <- merge(data, df_informations, by = "round_goal_link") %>%
 ::::: {.columns .responsive-columns}
 ::: {.column width="70%"}
 ```{r radar_chart}
-
 df_group_by <- data %>%
   group_by(player) %>%
   summarise(sum_goals = sum(Gls, na.rm = TRUE))
@@ -258,6 +257,7 @@ reactable(
 )
 
 ```
+
 :::
 
 ::: {.center}
@@ -318,7 +318,7 @@ highchart() %>%
              positioner = JS("function (labelWidth, labelHeight, point) {
       return { 
         x: point.plotX + 75, 
-        y: point.plotY 
+        y: point.plotY - 100
       };
     }")
     ) %>%

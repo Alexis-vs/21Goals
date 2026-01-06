@@ -67,6 +67,8 @@ def extract_table_from_url(urls: list[str], table_id: str, image: bool = False) 
     wait = WebDriverWait(driver, 15)
     
     for url in urls:
+        img_url = None
+        
         try:
             driver.get(url)
             # time.sleep(20)
